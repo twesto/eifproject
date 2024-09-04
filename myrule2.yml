@@ -1,0 +1,42 @@
+groups:
+- name: Resources_overload
+  rules:
+#alert for highCPU usage
+  - alert: HighCPUUsage
+    expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 70
+    for: 1s
+    annotations:
+      summary: "High CPU usage detected"
+      description: "CPU usage on instance {{ $labels.instance }} has exceeded 70% for more than 1 minute."
+    labels:
+      severity: 'critical'
+# Alert for high memory usage
+  - alert: HighMemoryUsage
+    # Condition for alerting
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 70
+    for: 1m
+    # Annotation - additional informational labels to store more information'
+    annotations:
+     title: 'High memory usage detected'
+     description: 'Memory usage on instance {{ $labels.instance }} has exceeded 70%'
+    # Labels - addtional labels to be attached to the alert
+    labels:
+      severity: 'critical'
+#alert for high disk usage
+  - alert: HighDiskUsage
+    expr: (node_filesystem_size_bytes{fstype=~"ext4|xfs"} - node_filesystem_avail_bytes{fstype=~"ext4|xfs"}) / node_filesystem_size_bytes{fstype=~"ext4|xfs"} * 100 > 70
+    for: 1m
+    annotations:
+      summary: "High Disk usage detected"
+      description: "Disk usage on instance {{ $labels.instance }} has exceeded 70% for more than 1 minute."
+    labels:
+      severity: 'critical'
+#alert for high SQL queries
+  - alert: HighSQLQueries
+    expr: rate(mysql_global_status_questions[1m]) > 50  # Adjust this threshold based on your use case
+    for: 5s
+    annotations:
+      summary: "High SQL query rate detected"
+      description: "The SQL query rate on instance {{ $labels.instance }} has exceeded 1000 queries per second for more than 1 minute."
+    labels:
+      severity: 'critical'
